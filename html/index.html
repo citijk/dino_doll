@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>dino — doll</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+<script>
+    var image_list = ['bag.png', 'blanket.png', 'cat.png', 'dino.png', 'flowers.png', 'koala.png', 'pillow.png', 'rubix.png', 'stockings.png', 'ball.png', 'book.png', 'comb.png', 'doll.png', 'garfield.png', 'nancy.png', 'rabbit.png', 'shoe.png', 'tv.png'].map(function(x){ return 'static/img/'+x })
+
+    var delayTime = 1000*30; // 30 sec
+    var delayTimer = 1000*5; // 5 sec
+
+    var maxCountDelayTimer = 8
+
+    var timeoutID;
+    var timerId;
+     
+    function setup() {
+        this.addEventListener("mousemove", resetTimer, false);
+        this.addEventListener("mousedown", resetTimer, false);
+        this.addEventListener("keypress", resetTimer, false);
+        this.addEventListener("DOMMouseScroll", resetTimer, false);
+        this.addEventListener("mousewheel", resetTimer, false);
+        this.addEventListener("touchmove", resetTimer, false);
+        this.addEventListener("MSPointerMove", resetTimer, false);
+     
+        startTimer();
+    }
+    if(window.location.pathname != '/'){
+    } else{
+        setup();
+    }
+     
+    function startTimer() {
+        // wait 2 seconds before calling goInactive
+        timeoutID = window.setTimeout(goInactive, delayTime);
+    }
+     
+    function resetTimer(e) {
+        window.clearTimeout(timeoutID);
+     
+        goActive();
+    }
+     
+
+    var pickRandomImage = function(list){
+        list.sort(function() {return .5 - Math.random();})
+        return list.pop();
+
+    };
+
+    function range(start, stop, step) {
+        if (typeof stop == 'undefined') {
+            stop = start;
+            start = 0;
+        }
+        if (typeof step == 'undefined') {
+            step = 1;
+        }
+        if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
+            return [];
+        }
+        var result = [];
+        for (var i = start; step > 0 ? i < stop : i > stop; i += step) {
+            result.push(i);
+        }
+        return result;
+    };
+
+    var get_perc = function(x,y){
+        _max = Math.max(x,y)
+        _min = Math.min(x,y)
+        return ((_max/_min)*100 - 100)
+    }
+
+
+    var _size_percent = range(30, 80, 50/maxCountDelayTimer)
+    var size_percent = []; 
+    var _positions = range(0, 1, 0.5/maxCountDelayTimer);
+    var positions = [];
+
+    var _positionsx = range(0, 1, 1/maxCountDelayTimer);
+    var positionsx = [];
+
+    var _positionsy = range(0, 1, 1/maxCountDelayTimer);
+    var positionsy = [];
+
+    function goInactive() {
+        imgs = image_list.slice().sort(function() {return .5 - Math.random();});
+        $('body').prepend($('<div/>', {"id": "random-images", "style":"position:fixed;left:0;right:0;height:100%;width:100%;z-index:9999;"}))
+        var canvas = document.querySelector('#random-images');
+
+        var def_count = 1
+
+        timerId = setInterval(function() {
+            if(!imgs.length>0){return false;}
+            if(def_count>maxCountDelayTimer){return false;}
+            def_count += 1
+            img_src = pickRandomImage(imgs)
+            if(!size_percent.length>0){size_percent = _size_percent.slice().sort(function() {return .5 - Math.random();});}
+            if(!positionsx.length>0){positionsx = _positionsx.slice().sort(function() {return .5 - Math.random();});}
+            if(!positionsy.length>0){positionsy = _positionsy.slice().sort(function() {return .5 - Math.random();});}
+
+            var img = new Image();
+            img.onload = function(){
+                perc = size_percent.pop()
+
+                this.width = this.width*(1-50/100)
+                this.height = this.height*(1-50/100)
+                /*
+                this.width = this.width*(1-perc/100)
+                this.height = this.height*(1-perc/100)
+
+                if(this.height > canvas.offsetHeight){
+                        p=get_perc(this.height, canvas.offsetHeight)
+                        this.width = this.width*(1-p/100)
+                        this.height = this.height*(1-p/100)
+                }else if(this.width > canvas.offsetWidth){
+                        p=get_perc(this.width, canvas.offsetWidth)
+                        this.width = this.width*(1-p/100)
+                        this.height = this.height*(1-p/100)
+                }
+                */
+
+                max_height = canvas.offsetHeight - this.height;
+                max_width = canvas.offsetWidth - this.width;
+                randomCoordinate = function(){
+                    var r = [];
+                    var x = Math.floor( positionsx.pop() * max_width );
+                    var y = Math.floor( positionsy.pop() * max_height );
+                    r = [x,y];
+                    return r;
+                };
+                xy = randomCoordinate();
+                container = $("<div/>", {"class":"x"}).hide()
+                container.css({"top": xy[1], "left": xy[0], position:"absolute", zIndex:9999})
+                container.append($(this).css({width:this.width, height:this.height}))
+                $("#random-images").append(container.fadeIn(900))
+            };
+            img.src = img_src;
+
+        }, delayTimer);
+    }
+     
+    function goActive() {
+        startTimer();
+        clearInterval(timerId);
+        $('.x').fadeOut(900, function(){
+            $('.x').remove()
+            $('#random-images').remove()
+        })
+    }
+                // Reactivated event
+
+$(window).bind("load", function(){
+    $('#body').delay(300).fadeTo('', 1);
+    $('#loading').delay(300).fadeTo('', 0);
+    //main_event()
+});
+
+</script>
+
+</head>
+<body>
+
+<div id="body">#body</div>
+<div id="loading">#loading</div>
+</body>
+</html>
